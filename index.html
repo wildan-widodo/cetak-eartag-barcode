@@ -9,10 +9,10 @@
     <style>
         * { box-sizing: border-box; font-family: Arial, sans-serif; }
         body { background: #f0f4f1; margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h2 { color: #2e7d32; margin-top: 0; text-align: center; }
+        .container { max-width: 950px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2, h3 { color: #2e7d32; margin-top: 0; text-align: center; }
         
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .form-group { text-align: left; }
         label { display: block; margin-bottom: 5px; color: #555; font-weight: bold; font-size: 0.9rem; }
         input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
@@ -20,25 +20,30 @@
         .btn-action { background: #2e7d32; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 1rem; width: 100%; }
         .btn-print { background: #1976d2; margin-top: 15px; }
 
-        /* Area Cetak Kartu EarTag */
+        /* Area Cetak Kartu EarTag Dinamis Berdasarkan Ukuran */
         #tagPreviewArea { 
             display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); 
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); 
             gap: 15px; 
             margin-top: 25px; 
         }
         .eartag-card { 
-            background: #fff; 
+            background: #fdfff8; 
             border: 2px dashed #2e7d32; 
             border-radius: 6px; 
-            padding: 15px; 
+            padding: 12px; 
             text-align: center; 
             page-break-inside: avoid;
-            background: #fdfff8;
+            margin: auto;
         }
-        .eartag-header { font-size: 0.8rem; font-weight: bold; color: #555; text-transform: uppercase; margin-bottom: 5px; }
-        .eartag-title { font-size: 1.4rem; font-weight: bold; color: #1b5e20; margin-bottom: 10px; }
-        .eartag-info { font-size: 0.75rem; color: #666; margin-top: 5px; }
+        .eartag-header { font-size: 0.75rem; font-weight: bold; color: #555; text-transform: uppercase; margin-bottom: 4px; }
+        .eartag-title { font-size: 1.3rem; font-weight: bold; color: #1b5e20; margin-bottom: 8px; }
+        .eartag-info { font-size: 0.7rem; color: #666; margin-top: 4px; }
+
+        /* Kotak Catatan Material untuk Percetakan */
+        .print-note { background: #e8f5e9; border-left: 5px solid #2e7d32; padding: 15px; border-radius: 6px; margin-top: 25px; }
+        .print-note h4 { margin: 0 0 8px 0; color: #1b5e20; }
+        .print-note ul { margin: 0; padding-left: 20px; font-size: 0.88rem; color: #444; line-height: 1.5; }
 
         /* Pengaturan Khusus Saat Mencetak (Print Mode) */
         @media print {
@@ -53,7 +58,7 @@
 
 <div class="container">
     <h2>🏷️ Generator Cetak Barcode EarTag Sapi Perah FH</h2>
-    <p style="text-align: center; color: #666; font-size: 0.9rem;">Buat dan cetak label barcode nomor telinga sapi secara massal untuk peternakan Anda.</p>
+    <p style="text-align: center; color: #666; font-size: 0.9rem;">Buat rancangan nomor anting telinga sapi lengkap dengan ukuran standar dan panduan material cetak.</p>
 
     <!-- FORM PENGATURAN -->
     <div class="no-print" style="background: #f8f9fa; padding: 15px; border-radius: 6px; border: 1px solid #ddd;">
@@ -70,18 +75,35 @@
                 <label>Nomor Akhir (End)</label>
                 <input type="number" id="endNum" value="70" min="1">
             </div>
+            <div class="form-group">
+                <label>Ukuran EarTag</label>
+                <select id="tagSize">
+                    <option value="adult">Sapi Dewasa / Indukan (60 x 75 mm)</option>
+                    <option value="calf">Pedet / Sapi Muda (45 x 55 mm)</option>
+                </select>
+            </div>
         </div>
         <button class="btn-action" onclick="generateTags()">Generate Barcode EarTag</button>
     </div>
 
     <!-- AREA PREVIEW & HASIL CETAK -->
     <div id="tagPreviewArea">
-        <p style="grid-column: 1 / -1; text-align: center; color: #777;">Silakan klik tombol "Generate Barcode EarTag" di atas untuk menampilkan kartu.</p>
+        <p style="grid-column: 1 / -1; text-align: center; color: #777;">Silakan klik tombol "Generate Barcode EarTag" di atas.</p>
+    </div>
+
+    <!-- PANDUAN SPESIFIKASI MATERIAL UNTUK TEMPAT CETAK -->
+    <div class="print-note no-print">
+        <h4>📋 Panduan Spesifikasi untuk Tempat Percetakan (Vendor):</h4>
+        <ul>
+            <li><b>Bahan Utama:</b> Wajib menggunakan bahan <b>TPU (Thermoplastic Polyurethane)</b> murni berkualitas tinggi agar lentur, tahan terhadap gigitan/gesekan kandang, serta tahan cuaca panas & kotoran.</li>
+            <li><b>Metode Cetak:</b> Gunakan *Thermal Transfer Printer* dengan pita *Resin Ribbon* hitam pekat agar cetakan teks dan barcode tidak mudah luntur terkena air kencing, amonia, atau sinar matahari.</li>
+            <li><b>Warna Dasar:</b> Disarankan menggunakan warna dasar <b>Kuning Terang / Oranye</b> dengan cetakan teks & garis barcode warna <b>Hitam Pekat</b> demi kontras pemindaian kamera yang optimal.</li>
+        </ul>
     </div>
 
     <!-- TOMBOL PRINT -->
     <div class="no-print" style="text-align: center;">
-        <button class="btn-action btn-print" onclick="window.print()" style="display:none;" id="printBtn">🖨️ Cetak / Print Label EarTag</button>
+        <button class="btn-action btn-print" onclick="window.print()" style="display:none;" id="printBtn">🖨️ Cetak / Print Panduan & Label EarTag</button>
     </div>
 </div>
 
@@ -90,6 +112,7 @@
         const prefix = document.getElementById('prefix').value.trim();
         const start = parseInt(document.getElementById('startNum').value);
         const end = parseInt(document.getElementById('endNum').value);
+        const sizeType = document.getElementById('tagSize').value;
         const area = document.getElementById('tagPreviewArea');
         const printBtn = document.getElementById('printBtn');
 
@@ -103,32 +126,38 @@
             return;
         }
 
+        // Pengaturan dimensi berdasarkan pilihan ukuran
+        let cardWidth = sizeType === 'adult' ? '220px' : '170px';
+        let cardHeight = sizeType === 'adult' ? '160px' : '130px';
+        let titleSize = sizeType === 'adult' ? '1.4rem' : '1.1rem';
+        let barcodeHeight = sizeType === 'adult' ? 45 : 35;
+
         area.innerHTML = '';
 
         for (let i = start; i <= end; i++) {
-            // Format nomor agar rapi menjadi 3 digit (contoh: 001, 002, dst)
             let paddedNum = String(i).padStart(3, '0');
             let tagCode = prefix + paddedNum;
 
-            // Buat elemen kartu eartag
             let card = document.createElement('div');
             card.className = 'eartag-card';
+            card.style.width = cardWidth;
+            card.style.minHeight = cardHeight;
+            
             card.innerHTML = `
                 <div class="eartag-header">AWW Farm Sapi Perah</div>
-                <div class="eartag-title">${tagCode}</div>
+                <div class="eartag-title" style="font-size: ${titleSize};">${tagCode}</div>
                 <svg id="barcode-${i}"></svg>
-                <div class="eartag-info">Barcode Identitas Sapi Perah</div>
+                <div class="eartag-info">${sizeType === 'adult' ? 'Standar Sapi Dewasa (60x75mm)' : 'Standar Pedet (45x55mm)'}</div>
             `;
             area.appendChild(card);
 
-            // Generate Barcode menggunakan library JsBarcode
             try {
                 JsBarcode(`#barcode-${i}`, tagCode, {
                     format: "CODE128",
-                    width: 1.8,
-                    height: 45,
+                    width: sizeType === 'adult' ? 1.8 : 1.4,
+                    height: barcodeHeight,
                     displayValue: true,
-                    fontSize: 14,
+                    fontSize: sizeType === 'adult' ? 13 : 11,
                     margin: 2
                 });
             } catch (err) {
@@ -136,11 +165,9 @@
             }
         }
 
-        // Tampilkan tombol print setelah data digenerate
         printBtn.style.display = 'block';
     }
 
-    // Generate otomatis saat pertama kali dibuka
     window.onload = function() {
         generateTags();
     }
