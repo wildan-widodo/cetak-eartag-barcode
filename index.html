@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator Cetak EarTag Barcode Sapi Perah</title>
+    <!-- Library JsBarcode untuk menghasilkan barcode secara otomatis -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></script>
+    <style>
+        * { box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { background: #f0f4f1; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2 { color: #2e7d32; margin-top: 0; text-align: center; }
+        
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .form-group { text-align: left; }
+        label { display: block; margin-bottom: 5px; color: #555; font-weight: bold; font-size: 0.9rem; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
+        
+        .btn-action { background: #2e7d32; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 1rem; width: 100%; }
+        .btn-print { background: #1976d2; margin-top: 15px; }
+
+        /* Area Cetak Kartu EarTag */
+        #tagPreviewArea { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); 
+            gap: 15px; 
+            margin-top: 25px; 
+        }
+        .eartag-card { 
+            background: #fff; 
+            border: 2px dashed #2e7d32; 
+            border-radius: 6px; 
+            padding: 15px; 
+            text-align: center; 
+            page-break-inside: avoid;
+            background: #fdfff8;
+        }
+        .eartag-header { font-size: 0.8rem; font-weight: bold; color: #555; text-transform: uppercase; margin-bottom: 5px; }
+        .eartag-title { font-size: 1.4rem; font-weight: bold; color: #1b5e20; margin-bottom: 10px; }
+        .eartag-info { font-size: 0.75rem; color: #666; margin-top: 5px; }
+
+        /* Pengaturan Khusus Saat Mencetak (Print Mode) */
+        @media print {
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; padding: 0; max-width: 100%; }
+            .no-print { display: none !important; }
+            .eartag-card { border: 2px solid #333; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🏷️ Generator Cetak Barcode EarTag Sapi Perah FH</h2>
+    <p style="text-align: center; color: #666; font-size: 0.9rem;">Buat dan cetak label barcode nomor telinga sapi secara massal untuk peternakan Anda.</p>
+
+    <!-- FORM PENGATURAN -->
+    <div class="no-print" style="background: #f8f9fa; padding: 15px; border-radius: 6px; border: 1px solid #ddd;">
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Awalan Kode (Prefix)</label>
+                <input type="text" id="prefix" value="FH-" placeholder="Contoh: FH-">
+            </div>
+            <div class="form-group">
+                <label>Nomor Mulai (Start)</label>
+                <input type="number" id="startNum" value="1" min="1">
+            </div>
+            <div class="form-group">
+                <label>Nomor Akhir (End)</label>
+                <input type="number" id="endNum" value="70" min="1">
+            </div>
+        </div>
+        <button class="btn-action" onclick="generateTags()">Generate Barcode EarTag</button>
+    </div>
+
+    <!-- AREA PREVIEW & HASIL CETAK -->
+    <div id="tagPreviewArea">
+        <p style="grid-column: 1 / -1; text-align: center; color: #777;">Silakan klik tombol "Generate Barcode EarTag" di atas untuk menampilkan kartu.</p>
+    </div>
+
+    <!-- TOMBOL PRINT -->
+    <div class="no-print" style="text-align: center;">
+        <button class="btn-action btn-print" onclick="window.print()" style="display:none;" id="printBtn">🖨️ Cetak / Print Label EarTag</button>
+    </div>
+</div>
+
+<script>
+    function generateTags() {
+        const prefix = document.getElementById('prefix').value.trim();
+        const start = parseInt(document.getElementById('startNum').value);
+        const end = parseInt(document.getElementById('endNum').value);
+        const area = document.getElementById('tagPreviewArea');
+        const printBtn = document.getElementById('printBtn');
+
+        if (isNaN(start) || isNaN(end) || start > end) {
+            alert('Mohon masukkan rentang nomor awal dan akhir dengan benar!');
+            return;
+        }
+
+        if ((end - start) > 200) {
+            alert('Maksimal pembuatan 200 tag sekaligus untuk menjaga performa.');
+            return;
+        }
+
+        area.innerHTML = '';
+
+        for (let i = start; i <= end; i++) {
+            // Format nomor agar rapi menjadi 3 digit (contoh: 001, 002, dst)
+            let paddedNum = String(i).padStart(3, '0');
+            let tagCode = prefix + paddedNum;
+
+            // Buat elemen kartu eartag
+            let card = document.createElement('div');
+            card.className = 'eartag-card';
+            card.innerHTML = `
+                <div class="eartag-header">Smart Farm Sapi Perah FH</div>
+                <div class="eartag-title">${tagCode}</div>
+                <svg id="barcode-${i}"></svg>
+                <div class="eartag-info">Kandang Closed House Freestall</div>
+            `;
+            area.appendChild(card);
+
+            // Generate Barcode menggunakan library JsBarcode
+            try {
+                JsBarcode(`#barcode-${i}`, tagCode, {
+                    format: "CODE128",
+                    width: 1.8,
+                    height: 45,
+                    displayValue: true,
+                    fontSize: 14,
+                    margin: 2
+                });
+            } catch (err) {
+                console.error("Gagal membuat barcode untuk " + tagCode, err);
+            }
+        }
+
+        // Tampilkan tombol print setelah data digenerate
+        printBtn.style.display = 'block';
+    }
+
+    // Generate otomatis saat pertama kali dibuka
+    window.onload = function() {
+        generateTags();
+    }
+</script>
+
+</body>
+</html>
