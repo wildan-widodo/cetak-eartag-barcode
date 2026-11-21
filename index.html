@@ -4,375 +4,668 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generator Cetak EarTag Sapi Realistis</title>
+    <title>Generator Cetak Barcode EarTag Sapi (Skala 1:1)</title>
+    <!-- Tailwind CSS untuk antarmuka responsif & modern -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Font Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <!-- Library JsBarcode -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></script>
+
     <style>
-        :root {
-            --primary-color: #2e7d32;
-            --secondary-color: #1b5e20;
-            --bg-color: #f4f7f6;
-            --tag-yellow: #fdd835;
-            --tag-white: #ffffff;
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', Arial, sans-serif;
         }
 
-        * { 
-            box-sizing: border-box; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+        body {
+            background-color: #f1f5f9;
+            color: #0f172a;
+            margin: 0;
+            padding: 0;
         }
 
-        body { 
-            background: var(--bg-color); 
-            margin: 0; 
-            padding: 20px; 
-            color: #333; 
+        /* =========================================================
+           SILUET FISIK EARTAG PRESISI (SATUAN MILIMETER 1:1)
+           ========================================================= */
+        .eartag-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            justify-content: center;
+            align-items: flex-start;
         }
 
-        .container { 
-            max-width: 1000px; 
-            margin: auto; 
-            background: white; 
-            padding: 30px; 
-            border-radius: 12px; 
-            box-shadow: 0 8px 20px rgba(0,0,0,0.08); 
+        .eartag-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            user-select: none;
+            filter: drop-shadow(0 4px 6px rgba(15, 23, 42, 0.14));
+            transition: transform 0.15s ease;
         }
 
-        h2 { 
-            color: var(--primary-color); 
-            margin-top: 0; 
-            text-align: center; 
-            font-size: 1.8rem;
-        }
-        
-        .desc {
-            text-align: center; 
-            color: #666; 
-            margin-bottom: 25px;
+        .eartag-unit:hover {
+            transform: translateY(-2px);
         }
 
-        /* Form Controls */
-        .form-panel {
-            background: #e8f5e9;
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid #c8e6c9;
-            margin-bottom: 30px;
+        /* Bagian Tonjolan Leher Atas + Lubang Peniti */
+        .eartag-neck {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+            border-top: 1px solid rgba(0, 0, 0, 0.22);
+            border-left: 1px solid rgba(0, 0, 0, 0.22);
+            border-right: 1px solid rgba(0, 0, 0, 0.22);
+            /* Overlap 1px ke bawah agar menyatu mulus dengan badan utama */
+            margin-bottom: -1px;
         }
 
-        .form-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
-            gap: 15px; 
+        /* Cincin cetakan plastik di sekitar lubang peniti */
+        .eartag-collar {
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1.5px solid rgba(0, 0, 0, 0.22);
+            box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.45), 0 1px 2px rgba(0, 0, 0, 0.15);
         }
 
-        .form-group label { 
-            display: block; 
-            margin-bottom: 6px; 
-            color: var(--secondary-color); 
-            font-weight: 600; 
-            font-size: 0.9rem; 
+        /* Lubang peniti tembus */
+        .eartag-hole {
+            background-color: #f1f5f9;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 0, 0, 0.32);
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25);
         }
 
-        input, select { 
-            width: 100%; 
-            padding: 10px 12px; 
-            border: 1px solid #bcaaa4; 
-            border-radius: 6px; 
-            font-size: 1rem; 
-            outline: none;
-            transition: border-color 0.3s;
-        }
-
-        input:focus, select:focus {
-            border-color: var(--primary-color);
-        }
-        
-        .btn-action { 
-            background: var(--primary-color); 
-            color: white; 
-            border: none; 
-            padding: 14px 20px; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            font-weight: bold; 
-            font-size: 1rem; 
-            width: 100%; 
-            margin-top: 20px;
-            transition: background 0.3s;
-        }
-
-        .btn-action:hover { background: var(--secondary-color); }
-        .btn-print { background: #1565c0; margin-top: 15px; }
-        .btn-print:hover { background: #0d47a1; }
-
-        /* Area Preview */
-        #tagPreviewArea { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
-            gap: 20px; 
-            justify-items: center;
-            margin-top: 20px; 
-        }
-
-        /* Desain Realistis Ear Tag */
-        .eartag-card { 
-            background: var(--tag-yellow); 
-            border: 1px solid #d4b528; 
-            /* Bentuk khas ear tag: atas agak lurus, bawah melengkung tajam */
-            border-radius: 12px 12px 50px 50px; 
+        /* Badan Utama (Area Cetak Efektif) */
+        .eartag-body {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
-            padding: 15px 10px; 
-            box-shadow: 2px 5px 10px rgba(0,0,0,0.15);
-            page-break-inside: avoid;
             position: relative;
+            z-index: 1;
+            border: 1px solid rgba(0, 0, 0, 0.22);
+            overflow: hidden;
         }
 
-        /* Simulasi lubang paku/peniti di atas */
-        .eartag-hole {
-            width: 14px;
-            height: 14px;
-            background-color: var(--bg-color);
-            border-radius: 50%;
-            border: 1px solid #c5a61f;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
-            margin-bottom: 5px;
+        /* Garis bantu tipis batas aman cetak (opsional di layar, disembunyikan saat print) */
+        .safe-zone-guide {
+            position: absolute;
+            inset: 2.5mm;
+            border: 1px dashed rgba(0, 0, 0, 0.22);
+            border-radius: 2.5mm;
+            pointer-events: none;
         }
 
-        .eartag-header { 
-            font-size: 0.9rem; 
-            font-weight: 800; 
-            color: #222; 
-            text-transform: uppercase; 
-            letter-spacing: 1px;
+        /* Nomor Identitas Sapi (Besar, Tebal, Kontras Tinggi) */
+        .eartag-number {
+            color: #000000;
+            font-weight: 900;
+            line-height: 1.05;
+            letter-spacing: -0.02em;
             text-align: center;
-        }
-
-        /* Nomor Utama Ekstra Besar */
-        .eartag-title { 
-            font-weight: 900; 
-            color: #000; 
-            text-align: center;
-            line-height: 1;
-            /* Flex grow agar angka selalu berada di tengah (vertikal) */
-            flex-grow: 1;
+            width: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 100%;
+            flex: 1;
+            padding: 0 3mm;
+            white-space: nowrap;
         }
 
-        .barcode-container {
+        /* Wadah Barcode */
+        .eartag-barcode-wrap {
             width: 100%;
             display: flex;
+            align-items: center;
             justify-content: center;
-            background: transparent;
-            padding-bottom: 10px;
         }
 
-        .barcode-container svg {
-            max-width: 90%;
-            height: auto;
+        .eartag-barcode-wrap svg {
+            display: block;
+            shape-rendering: crispEdges;
         }
 
-        /* Kotak Catatan */
-        .print-note { 
-            background: #fff3e0; 
-            border-left: 5px solid #ff9800; 
-            padding: 15px; 
-            border-radius: 6px; 
-            margin-top: 40px; 
+        /* ---------------------------------------------------------
+           UKURAN 1: SAPI DEWASA (Total 60 x 70 mm)
+           Leher: 20 mm | Area Cetak Efektif: 60 x 50 mm
+           --------------------------------------------------------- */
+        .size-adult {
+            width: 60mm;
+            height: 70mm;
+        }
+        .size-adult .eartag-neck {
+            width: 25mm;
+            height: 20mm;
+            border-radius: 12.5mm 12.5mm 0 0;
+            padding-top: 2.5mm;
+        }
+        .size-adult .eartag-collar {
+            width: 13mm;
+            height: 13mm;
+        }
+        .size-adult .eartag-hole {
+            width: 7mm;
+            height: 7mm;
+        }
+        .size-adult .eartag-body {
+            width: 60mm;
+            height: 50mm;
+            border-radius: 5mm;
+            padding-top: 3.5mm;
+            padding-bottom: 4.5mm;
+        }
+        .size-adult .eartag-number {
+            font-size: 30pt;
+        }
+        .size-adult .eartag-barcode-wrap svg {
+            width: 47mm;   /* Aman di rentang 46-48 mm (margin kiri-kanan 6.5 mm) */
+            height: 14.5mm;
         }
 
-        .print-note h4 { margin: 0 0 8px 0; color: #e65100; }
-        .print-note ul { margin: 0; padding-left: 20px; font-size: 0.9rem; color: #444; line-height: 1.6; }
+        /* ---------------------------------------------------------
+           UKURAN 2: PEDET / ANAK SAPI (Total 45 x 50 mm)
+           Leher: 15 mm | Area Cetak Efektif: 45 x 35 mm
+           --------------------------------------------------------- */
+        .size-calf {
+            width: 45mm;
+            height: 50mm;
+        }
+        .size-calf .eartag-neck {
+            width: 19mm;
+            height: 15mm;
+            border-radius: 9.5mm 9.5mm 0 0;
+            padding-top: 2mm;
+        }
+        .size-calf .eartag-collar {
+            width: 10mm;
+            height: 10mm;
+        }
+        .size-calf .eartag-hole {
+            width: 5.5mm;
+            height: 5.5mm;
+        }
+        .size-calf .eartag-body {
+            width: 45mm;
+            height: 35mm;
+            border-radius: 4mm;
+            padding-top: 2.5mm;
+            padding-bottom: 3.2mm;
+        }
+        .size-calf .eartag-number {
+            font-size: 21pt;
+        }
+        .size-calf .eartag-barcode-wrap svg {
+            width: 35mm;   /* Aman di rentang 34-36 mm (margin kiri-kanan 5 mm) */
+            height: 10.5mm;
+        }
 
-        /* Mode Cetak (Print) */
+        /* Penggaris Kalibrasi 50mm untuk Tes Fitting 1:1 */
+        .calibration-bar {
+            width: 50mm;
+            height: 6mm;
+            border-left: 2px solid #0f172a;
+            border-right: 2px solid #0f172a;
+            border-bottom: 2px solid #0f172a;
+            position: relative;
+        }
+
+        /* =========================================================
+           PENGATURAN CETAK / PRINT MODE (SKALA 1:1 AKURAT)
+           ========================================================= */
+        @page {
+            size: A4 portrait;
+            margin: 10mm;
+        }
+
         @media print {
-            body { 
-                background: white; 
-                padding: 0; 
+            body {
+                background-color: #ffffff !important;
+                padding: 0 !important;
+                margin: 0 !important;
             }
-            .container { 
-                box-shadow: none; 
-                padding: 0; 
-                max-width: 100%; 
+
+            .no-print {
+                display: none !important;
             }
-            .no-print { 
-                display: none !important; 
+
+            .print-wrapper {
+                max-width: 100% !important;
+                width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+                background: transparent !important;
             }
-            #tagPreviewArea { 
-                gap: 15px;
-                /* Mengatur agar hemat kertas saat di print */
-                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); 
+
+            .eartag-grid {
+                gap: 4mm !important;
+                justify-content: flex-start !important;
             }
-            .eartag-card { 
-                box-shadow: none;
-                /* Memaksa browser mencetak warna background (kuning) */
-                -webkit-print-color-adjust: exact; 
-                print-color-adjust: exact;
-                border: 1px solid #999;
+
+            .eartag-unit {
+                filter: none !important;
+                transform: none !important;
+                break-inside: avoid;
+                page-break-inside: avoid;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
+
             .eartag-hole {
-                background-color: #fff; /* Warna kertas */
+                background-color: #ffffff !important;
+                box-shadow: none !important;
+            }
+
+            .safe-zone-guide {
+                display: none !important;
             }
         }
     </style>
 </head>
-<body>
+<body class="min-h-screen py-6 px-3 sm:px-6">
 
-<div class="container">
-    <h2 class="no-print">🏷️ Generator Cetak EarTag Sapi (Realistis)</h2>
-    <p class="desc no-print">Desain portrait menyerupai anting telinga asli dengan nomor ekstra besar dan barcode fungsional.</p>
+    <div class="max-w-6xl mx-auto print-wrapper">
+        
+        <!-- HEADER APLIKASI (NO-PRINT) -->
+        <header class="no-print bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-7 mb-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold mb-2">
+                        <span>Skala Presisi 1:1 (mm)</span>
+                        <span>•</span>
+                        <span>Laser Marking Ready</span>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                        Generator Cetak Barcode EarTag Sapi
+                    </h1>
+                    <p class="text-slate-600 text-sm sm:text-base mt-1">
+                        Desain simpel fokus pada <strong>Nomor Identitas Besar</strong> dan <strong>Barcode CODE128</strong> presisi dengan siluet fisik eartag standar.
+                    </p>
+                </div>
 
-    <!-- FORM PENGATURAN -->
-    <div class="form-panel no-print">
-        <div class="form-grid">
-            <div class="form-group">
-                <label>Nama Farm (Header)</label>
-                <input type="text" id="farmName" value="AWW FARM" placeholder="Contoh: AWW FARM">
+                <!-- Penggaris Kalibrasi Fisik -->
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 shrink-0">
+                    <div class="text-xs font-semibold text-slate-700 mb-1.5 flex items-center justify-between gap-3">
+                        <span>Uji Kalibrasi Skala 1:1</span>
+                        <span class="text-emerald-700 font-bold">50 mm (5 cm)</span>
+                    </div>
+                    <div class="calibration-bar mx-auto"></div>
+                    <p class="text-[11px] text-slate-500 mt-1.5 leading-tight">
+                        Saat cetak PDF/kertas, pastikan <strong>Scale = 100%</strong>.
+                    </p>
+                </div>
             </div>
-            <div class="form-group">
-                <label>Awalan Kode (Prefix)</label>
-                <input type="text" id="prefix" value="FH-" placeholder="Contoh: FH-">
+        </header>
+
+        <!-- PANEL PENGATURAN FORM (NO-PRINT) -->
+        <section class="no-print bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-7 mb-6">
+            <h2 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
+                Pengaturan Nomor, Ukuran & Warna EarTag
+            </h2>
+
+            <!-- Kotak Pesan Validasi (Pengganti alert) -->
+            <div id="messageBox" class="hidden mb-4 p-3.5 rounded-xl border text-sm font-medium flex items-center justify-between gap-3">
+                <span id="messageText"></span>
+                <button type="button" onclick="hideMessage()" class="text-xs font-bold underline px-2 py-1 rounded">Tutup</button>
             </div>
-            <div class="form-group">
-                <label>Nomor Mulai</label>
-                <input type="number" id="startNum" value="1" min="1">
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                <!-- Input Prefix -->
+                <div>
+                    <label for="prefix" class="block text-sm font-semibold text-slate-700 mb-1.5">
+                        Awalan Kode / Prefix <span class="text-slate-400 font-normal">(Opsional)</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="prefix" 
+                        value="FH-" 
+                        maxlength="8"
+                        placeholder="Contoh: FH- (kosongkan jika angka saja)"
+                        class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 transition"
+                    >
+                </div>
+
+                <!-- Nomor Mulai -->
+                <div>
+                    <label for="startNum" class="block text-sm font-semibold text-slate-700 mb-1.5">
+                        Nomor Mulai
+                    </label>
+                    <input 
+                        type="number" 
+                        id="startNum" 
+                        value="1" 
+                        min="0" 
+                        max="99999"
+                        class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 transition"
+                    >
+                </div>
+
+                <!-- Nomor Akhir -->
+                <div>
+                    <label for="endNum" class="block text-sm font-semibold text-slate-700 mb-1.5">
+                        Nomor Akhir
+                    </label>
+                    <input 
+                        type="number" 
+                        id="endNum" 
+                        value="100" 
+                        min="0" 
+                        max="99999"
+                        class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 transition"
+                    >
+                </div>
+
+                <!-- Pilihan Ukuran -->
+                <div>
+                    <label for="tagSize" class="block text-sm font-semibold text-slate-700 mb-1.5">
+                        Ukuran Standar EarTag
+                    </label>
+                    <select 
+                        id="tagSize" 
+                        onchange="generateTags()"
+                        class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-slate-900 font-medium bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 transition"
+                    >
+                        <option value="adult" selected>Sapi Dewasa (60 × 70 mm | Cetak 60 × 50 mm)</option>
+                        <option value="calf">Pedet / Anak Sapi (45 × 50 mm | Cetak 45 × 35 mm)</option>
+                    </select>
+                </div>
+
+                <!-- Pilihan Warna -->
+                <div>
+                    <label for="tagColor" class="block text-sm font-semibold text-slate-700 mb-1.5">
+                        Warna Dasar EarTag
+                    </label>
+                    <select 
+                        id="tagColor" 
+                        onchange="generateTags()"
+                        class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-slate-900 font-medium bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 transition"
+                    >
+                        <option value="#ffeb3b" selected>Kuning (#FFEB3B) — Rekomendasi Kontras Terbaik</option>
+                        <option value="#4caf50">Hijau (#4CAF50)</option>
+                        <option value="#2196f3">Biru (#2196F3)</option>
+                        <option value="#f44336">Merah (#F44336)</option>
+                    </select>
+                </div>
+
+                <!-- Format Digit Nomor -->
+                <div>
+                    <label for="digitPad" class="block text-sm font-semibold text-slate-700 mb-1.5">
+                        Format Digit Angka
+                    </label>
+                    <select 
+                        id="digitPad" 
+                        onchange="generateTags()"
+                        class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-slate-900 font-medium bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 transition"
+                    >
+                        <option value="3" selected>3 Digit (Contoh: 001 – 100)</option>
+                        <option value="4">4 Digit (Contoh: 0001 – 0100)</option>
+                        <option value="1">Tanpa Nol Depan (Contoh: 1 – 100)</option>
+                    </select>
+                </div>
             </div>
-            <div class="form-group">
-                <label>Nomor Akhir</label>
-                <input type="number" id="endNum" value="12" min="1">
+
+            <!-- Opsi Tambahan & Tombol Aksi -->
+            <div class="mt-5 pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <label class="inline-flex items-center gap-2.5 cursor-pointer select-none text-sm text-slate-700">
+                    <input 
+                        type="checkbox" 
+                        id="toggleGuide" 
+                        checked 
+                        onchange="toggleSafeGuides()"
+                        class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-600 border-slate-300"
+                    >
+                    <span>Tampilkan garis bantu batas aman area cetak (hanya di layar)</span>
+                </label>
+
+                <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                    <button 
+                        type="button" 
+                        onclick="generateTags()" 
+                        class="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-sm shadow-sm transition cursor-pointer"
+                    >
+                        Generate EarTag
+                    </button>
+                    <button 
+                        type="button" 
+                        onclick="window.print()" 
+                        class="px-5 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white font-bold text-sm shadow-sm transition cursor-pointer"
+                    >
+                        Cetak / Simpan PDF (Skala 1:1)
+                    </button>
+                </div>
             </div>
-            <div class="form-group">
-                <label>Ukuran EarTag</label>
-                <select id="tagSize">
-                    <option value="adult">Dewasa (Standar 220x280px)</option>
-                    <option value="calf">Pedet (Kecil 170x220px)</option>
-                </select>
+        </section>
+
+        <!-- BAR STATUS INFO PREVIEW (NO-PRINT) -->
+        <div class="no-print flex flex-wrap items-center justify-between gap-2 px-1 mb-3 text-xs sm:text-sm text-slate-600">
+            <div id="previewStats" class="font-medium">
+                Menampilkan <strong>100</strong> label • Ukuran <strong>60 × 70 mm</strong> (Area cetak efektif <strong>60 × 50 mm</strong>)
             </div>
-            <div class="form-group">
-                <label>Warna Dasar</label>
-                <select id="tagColor">
-                    <option value="yellow">Kuning Standar</option>
-                    <option value="white">Putih Bersih</option>
-                </select>
+            <div id="contrastBadge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-100 text-amber-900 font-semibold text-xs">
+                Kontras Laser: Sangat Tinggi (Optimal untuk Scanner)
             </div>
         </div>
-        <button class="btn-action" onclick="generateTags()">⚙️ Buat Desain EarTag</button>
-    </div>
 
-    <!-- AREA PREVIEW & HASIL CETAK -->
-    <div id="tagPreviewArea">
-        <p style="grid-column: 1 / -1; text-align: center; color: #777;" class="no-print">
-            Silakan atur parameter dan klik tombol "Buat Desain EarTag".
-        </p>
-    </div>
+        <!-- AREA PREVIEW & CETAK EARTAG -->
+        <main class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-8 mb-6 print-wrapper overflow-x-auto">
+            <div id="tagPreviewArea" class="eartag-grid"></div>
+        </main>
 
-    <!-- PANDUAN SPESIFIKASI CETAK -->
-    <div class="print-note no-print" id="printGuide" style="display:none;">
-        <h4>📋 Panduan Vendor Percetakan (Laser Engraving / Thermal Transfer):</h4>
-        <ul>
-            <li><b>Material Tag:</b> Gunakan bahan <b>TPU Blank Ear Tag</b> (Polos) tipe lentur.</li>
-            <li><b>Dimensi Fisik:</b> Desain dewasa proporsional untuk ukuran tag fisik <b>60 x 75 mm</b> atau <b>70 x 100 mm</b> (Extra Large).</li>
-            <li><b>Metode:</b> Disarankan menggunakan <i>Laser Marking</i> (grafir hitam) agar nomor raksasa dan barcode menempel permanen anti luntur terhadap cuaca ekstrem.</li>
-            <li><b>Scanning Barcode:</b> Jangan mencetak barcode terlalu dekat dengan lengkungan bawah agar mesin scanner mudah membaca tanpa distorsi lengkungan.</li>
-        </ul>
-        
-        <button class="btn-action btn-print" onclick="window.print()">🖨️ Cetak / Simpan sebagai PDF</button>
-    </div>
-</div>
-
-<script>
-    function generateTags() {
-        // Mengambil nilai dari form
-        const farmName = document.getElementById('farmName').value.trim() || 'FARM';
-        const prefix = document.getElementById('prefix').value.trim();
-        const start = parseInt(document.getElementById('startNum').value);
-        const end = parseInt(document.getElementById('endNum').value);
-        const sizeType = document.getElementById('tagSize').value;
-        const colorType = document.getElementById('tagColor').value;
-        
-        const area = document.getElementById('tagPreviewArea');
-        const printGuide = document.getElementById('printGuide');
-
-        // Validasi
-        if (isNaN(start) || isNaN(end) || start > end) {
-            alert('Mohon masukkan rentang nomor awal dan akhir yang logis (Mulai <= Akhir).');
-            return;
-        }
-        if ((end - start) > 300) {
-            alert('Peringatan: Membuat lebih dari 300 tag sekaligus dapat memperlambat browser Anda.');
-        }
-
-        // Konfigurasi Desain Berdasarkan Pilihan
-        let cardWidth = sizeType === 'adult' ? '220px' : '170px';
-        let cardHeight = sizeType === 'adult' ? '280px' : '220px';
-        
-        // Ukuran font sangat besar untuk nomor utama
-        let titleSize = sizeType === 'adult' ? '3.2rem' : '2.4rem';
-        
-        // Konfigurasi ukuran Barcode
-        let barcodeWidth = sizeType === 'adult' ? 2 : 1.5;
-        let barcodeHeight = sizeType === 'adult' ? 50 : 35;
-        
-        // Konfigurasi Warna
-        let bgColor = colorType === 'yellow' ? 'var(--tag-yellow)' : 'var(--tag-white)';
-
-        // Kosongkan area sebelum render ulang
-        area.innerHTML = '';
-
-        for (let i = start; i <= end; i++) {
-            // Padding angka agar selalu 3 digit (contoh: 001, 012, 123)
-            let paddedNum = String(i).padStart(3, '0');
-            let tagCode = prefix + paddedNum;
-
-            // Membuat elemen kartu eartag
-            let card = document.createElement('div');
-            card.className = 'eartag-card';
-            card.style.width = cardWidth;
-            card.style.height = cardHeight;
-            card.style.background = bgColor;
-            
-            // Struktur internal Ear Tag
-            card.innerHTML = `
-                <div class="eartag-hole"></div>
-                <div class="eartag-header">${farmName}</div>
-                <div class="eartag-title" style="font-size: ${titleSize};">${tagCode}</div>
-                <div class="barcode-container">
-                    <svg id="barcode-${i}"></svg>
+        <!-- PANDUAN SINGKAT VENDOR LASER MARKING (NO-PRINT) -->
+        <footer class="no-print bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-7">
+            <h3 class="text-base font-bold text-slate-900 mb-3 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                Panduan Teknis untuk Vendor Laser Marking & Tes Fitting
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-slate-600 leading-relaxed">
+                <div class="bg-slate-50 rounded-xl p-4 border border-slate-200/80">
+                    <div class="font-bold text-slate-900 mb-1">1. Area Cetak Efektif & Margin</div>
+                    <p>
+                        <strong>Sapi Dewasa (60×70 mm):</strong> Leher 20 mm, area efektif bawah <strong>60×50 mm</strong> dengan lebar barcode <strong>47 mm</strong> (margin kiri-kanan 6,5 mm).<br>
+                        <strong>Pedet (45×50 mm):</strong> Leher 15 mm, area efektif bawah <strong>45×35 mm</strong> dengan lebar barcode <strong>35 mm</strong> (margin 5 mm) agar garis tidak melengkung ke tepi.
+                    </p>
                 </div>
-            `;
-            
-            area.appendChild(card);
+                <div class="bg-slate-50 rounded-xl p-4 border border-slate-200/80">
+                    <div class="font-bold text-slate-900 mb-1">2. Rekomendasi Warna Kontras</div>
+                    <p>
+                        Gunakan blank eartag warna <strong>Kuning (#FFEB3B)</strong> untuk kontras hitam-kuning terbaik. Warna kuning membuat hasil grafir laser hitam pekat (#000000) tetap cepat terbaca kamera/scanner meskipun eartag kotor terkena lumpur kandang.
+                    </p>
+                </div>
+                <div class="bg-slate-50 rounded-xl p-4 border border-slate-200/80">
+                    <div class="font-bold text-slate-900 mb-1">3. Cara Tes Fitting 1:1 di Kertas</div>
+                    <p>
+                        Klik <strong>Cetak / Simpan PDF</strong>, atur skala cetak browser ke <strong>100% (Actual Size)</strong> pada kertas A4, gunting siluet kartu, lalu tempelkan langsung ke fisik blank eartag TPU sebelum produksi massal.
+                    </p>
+                </div>
+            </div>
+        </footer>
 
-            // Generate Barcode menggunakan JsBarcode
-            try {
-                JsBarcode(`#barcode-${i}`, tagCode, {
-                    format: "CODE128",     // Format paling umum dan efisien
-                    width: barcodeWidth,   // Ketebalan garis
-                    height: barcodeHeight, // Tinggi garis barcode
-                    displayValue: false,   // SEMBUNYIKAN teks agar tidak bentrok dengan nomor raksasa
-                    margin: 0,
-                    lineColor: "#000000",
-                    background: "transparent"
-                });
-            } catch (err) {
-                console.error("Gagal membuat barcode untuk " + tagCode, err);
+    </div>
+
+    <script>
+        /**
+         * Menampilkan pesan notifikasi ramah pengguna tanpa menggunakan alert()
+         */
+        function showMessage(text, type = 'error') {
+            const box = document.getElementById('messageBox');
+            const msgText = document.getElementById('messageText');
+            msgText.textContent = text;
+
+            box.classList.remove('hidden', 'bg-red-50', 'border-red-200', 'text-red-800', 'bg-amber-50', 'border-amber-200', 'text-amber-800');
+            if (type === 'warning') {
+                box.classList.add('bg-amber-50', 'border-amber-200', 'text-amber-800');
+            } else {
+                box.classList.add('bg-red-50', 'border-red-200', 'text-red-800');
             }
         }
 
-        // Tampilkan tombol print setelah tag dibuat
-        printGuide.style.display = 'block';
-    }
+        function hideMessage() {
+            document.getElementById('messageBox').classList.add('hidden');
+        }
 
-    // Buat desain awal saat halaman pertama kali dimuat
-    window.onload = function() {
-        generateTags();
-    }
-</script>
+        /**
+         * Mengatur visibilitas garis bantu area cetak efektif pada tampilan layar
+         */
+        function toggleSafeGuides() {
+            const show = document.getElementById('toggleGuide').checked;
+            const guides = document.querySelectorAll('.safe-zone-guide');
+            guides.forEach(g => {
+                g.style.display = show ? 'block' : 'none';
+            });
+        }
 
+        /**
+         * Memperbarui indikator kontras warna dan statistik jumlah label
+         */
+        function updateStatusBars(total, sizeType, colorHex) {
+            const statsEl = document.getElementById('previewStats');
+            const badgeEl = document.getElementById('contrastBadge');
+
+            const sizeDesc = sizeType === 'adult'
+                ? '<strong>60 × 70 mm</strong> (Area cetak efektif <strong>60 × 50 mm</strong>)'
+                : '<strong>45 × 50 mm</strong> (Area cetak efektif <strong>45 × 35 mm</strong>)';
+
+            statsEl.innerHTML = `Menampilkan <strong>${total}</strong> label • Ukuran ${sizeDesc}`;
+
+            badgeEl.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-semibold text-xs';
+            if (colorHex === '#ffeb3b') {
+                badgeEl.classList.add('bg-amber-100', 'text-amber-900');
+                badgeEl.textContent = 'Kontras Laser: Sangat Tinggi (Rekomendasi Terbaik)';
+            } else if (colorHex === '#4caf50') {
+                badgeEl.classList.add('bg-emerald-100', 'text-emerald-900');
+                badgeEl.textContent = 'Kontras Laser: Baik (Cukup Terang untuk Scanner)';
+            } else {
+                badgeEl.classList.add('bg-slate-200', 'text-slate-800');
+                badgeEl.textContent = 'Kontras Laser: Sedang (Pastikan Laser Hitam Pekat)';
+            }
+        }
+
+        /**
+         * Menghitung ukuran font optimal dalam satuan pt agar tetap besar & tidak terpotong
+         * jika pengguna memasukkan prefix yang panjang
+         */
+        function getOptimalFontSizePt(text, sizeType) {
+            const len = text.length;
+            if (sizeType === 'adult') {
+                if (len <= 6) return '30pt';
+                if (len <= 8) return '25pt';
+                return '21pt';
+            } else {
+                if (len <= 6) return '21pt';
+                if (len <= 8) return '17.5pt';
+                return '15pt';
+            }
+        }
+
+        /**
+         * Fungsi utama untuk membuat siluet eartag 1:1 dan merender barcode CODE128
+         */
+        function generateTags() {
+            hideMessage();
+
+            const prefix = document.getElementById('prefix').value.trim();
+            const start = parseInt(document.getElementById('startNum').value, 10);
+            const end = parseInt(document.getElementById('endNum').value, 10);
+            const sizeType = document.getElementById('tagSize').value;
+            const colorHex = document.getElementById('tagColor').value;
+            const padDigits = parseInt(document.getElementById('digitPad').value, 10);
+            const showGuide = document.getElementById('toggleGuide').checked;
+
+            const area = document.getElementById('tagPreviewArea');
+
+            // Validasi input rentang nomor
+            if (isNaN(start) || isNaN(end) || start < 0 || end < 0) {
+                showMessage('Mohon masukkan angka nomor mulai dan nomor akhir yang valid (minimal 0).', 'error');
+                return;
+            }
+            if (start > end) {
+                showMessage('Nomor Mulai tidak boleh lebih besar daripada Nomor Akhir.', 'error');
+                return;
+            }
+
+            const totalCount = (end - start) + 1;
+            if (totalCount > 500) {
+                showMessage('Maksimal pembuatan adalah 500 label sekaligus agar proses render dan cetak tetap ringan.', 'error');
+                return;
+            }
+            if (totalCount > 200) {
+                showMessage(`Membuat ${totalCount} label sekaligus. Pastikan pengaturan halaman PDF/Print sudah sesuai sebelum mencetak.`, 'warning');
+            }
+
+            updateStatusBars(totalCount, sizeType, colorHex);
+            area.innerHTML = '';
+
+            // Gunakan DocumentFragment untuk performa render 100+ tag yang sangat cepat
+            const fragment = document.createDocumentFragment();
+            const sizeClass = sizeType === 'adult' ? 'size-adult' : 'size-calf';
+
+            // Konfigurasi kerapatan garis barcode agar optimal untuk masing-masing ukuran
+            const barcodeBarWidth = sizeType === 'adult' ? 1.8 : 1.35;
+            const barcodeBarHeight = sizeType === 'adult' ? 52 : 38;
+
+            for (let i = start; i <= end; i++) {
+                const formattedNum = padDigits > 1 ? String(i).padStart(padDigits, '0') : String(i);
+                const fullCode = `${prefix}${formattedNum}`;
+                const fontSizePt = getOptimalFontSizePt(fullCode, sizeType);
+
+                const unit = document.createElement('div');
+                unit.className = `eartag-unit ${sizeClass}`;
+
+                unit.innerHTML = `
+                    <div class="eartag-neck" style="background-color: ${colorHex};">
+                        <div class="eartag-collar" style="background-color: ${colorHex};">
+                            <div class="eartag-hole"></div>
+                        </div>
+                    </div>
+                    <div class="eartag-body" style="background-color: ${colorHex};">
+                        <div class="safe-zone-guide" style="display: ${showGuide ? 'block' : 'none'};"></div>
+                        <div class="eartag-number" style="font-size: ${fontSizePt};">${fullCode}</div>
+                        <div class="eartag-barcode-wrap">
+                            <svg id="barcode-${i}"></svg>
+                        </div>
+                    </div>
+                `;
+
+                fragment.appendChild(unit);
+            }
+
+            area.appendChild(fragment);
+
+            // Render vektor barcode CODE128 pada setiap elemen SVG
+            for (let i = start; i <= end; i++) {
+                const formattedNum = padDigits > 1 ? String(i).padStart(padDigits, '0') : String(i);
+                const fullCode = `${prefix}${formattedNum}`;
+
+                try {
+                    JsBarcode(`#barcode-${i}`, fullCode, {
+                        format: 'CODE128',
+                        width: barcodeBarWidth,
+                        height: barcodeBarHeight,
+                        displayValue: false,
+                        margin: 0,
+                        lineColor: '#000000',
+                        background: 'transparent'
+                    });
+                } catch (err) {
+                    console.error(`Gagal menghasilkan barcode untuk kode ${fullCode}:`, err);
+                }
+            }
+        }
+
+        // Jalankan pembuatan awal saat halaman selesai dimuat
+        window.addEventListener('DOMContentLoaded', generateTags);
+    </script>
 </body>
 </html>
+```
